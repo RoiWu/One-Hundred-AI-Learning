@@ -1,0 +1,61 @@
+#- 基本應用
+pd.DataFrame({'PassengerId': ids, 'Survived': pred})
+feats = pd.Series(data=estimator.feature_importances_, index=df.columns) 
+df.dtypes, df.columns #抓取每行的類別
+df.describe() #抓其每行敘述
+df.sort_index(by=['Ticket_Count'], ascending = False) #以xx排序
+df= np.log1p(df['SalePrice']) #取log
+np.expm1(gdbt_pred) #取反log
+df.value_counts() #計算相同值的數量
+df.replace({365243: np.nan}, inplace = True) #取代某值為某值
+
+#- 兩部分集合方式
+mean_df = data.groupby([c])['SalePrice'].mean().reset_index()
+mean_df.columns = [c, f'{c}_mean']
+data = pd.merge(data, mean_df, on=c, how='left') #以c當anchor，且anchor於左
+
+np.concatenate([train_data_y1, train_data_y0])
+df = pd.concat([df_train,df_test])  #上下疊加
+df = pd.concat([df_train,df_test], axis=1)  #左右疊加
+
+#- 統計應用
+quantile_5s = [np.percentile(app_train[~app_train.isnull()]['AMT_ANNUITY'], q = i) for i in [0, 25, 50, 75, 100]] #抓分位數
+app_train['CNT_CHILDREN_GROUP'] = pd.cut(app_train['CNT_CHILDREN'].values, [-1,0,2,5,1000], include_lowest=True) #依區間切割
+ages["equal_freq_age"] = pd.qcut(ages["age"], 4) #依數量等分切割
+np.corrcoef(x, y) #相關係數矩陣
+app_train.corr()['TARGET'] #相關係數with每個變數
+
+#- 統計應用，所有數據一起做log/某公式轉換(使之較相近)
+from scipy import stats
+df_fixed['LotArea'] = stats.boxcox(df['LotArea'], lmbda=0.5)
+
+#- 取眾數
+from collections import defaultdict
+mode_dict = defaultdict(lambda:0)
+for value in app_train['AMT_ANNUITY_NORMALIZED']:
+    mode_dict[value] += 1
+mode_get = sorted(mode_dict.items(), key=lambda kv: kv[1], reverse=True)
+
+#- na應用
+a = app_train['OWN_CAR_AGE'].dropna() #去除為na的列
+df.isnull().sum() #統計nan數量
+df = df.fillna(-1) #將na以-1填入
+
+#- apply/map/applymap差異
+df['Cabin'].map(lambda x:hash(x) % 5) #對該資料一次處理
+df.select_dtypes(include=["object"]).apply(pd.Series.nunique, axis = 0) #檢查object內的數量
+apply/applymap  -> 近乎一樣
+map   -> 讀入series改變dataset中的series+其他應用
+
+#- Group應用
+dtype_df = dtype_df.groupby("Column Type").aggregate('count') #依組分類並聚集
+dtype_df = dtype_df.groupby("Column Type").aggregate('count').reset_index() #把上述的資訊新創一欄
+dtype_df = dtype_df.groupby("Column Type").aggregate('count').reset_index(drop=True) #刪除"Colume Type"
+
+#- 時間週期制
+df['day_cycle'] = df['pickup_hour']/12 + df['pickup_minute']/720 + df['pickup_second']/43200
+df['day_cycle'] = df['day_cycle'].map(lambda x:math.sin(x*math.pi))  #將時間變為圓定義
+
+#- copy
+import copy
+df_fixed = copy.deepcopy(df) #hardcopy
