@@ -1,0 +1,75 @@
+#- 圖表
+app_train.hist(column="AMT_GOODS_PRICE", bins=100, grid=False, xlabelsize=10, figsize=(16,4)) #直方圖
+app_train['DAYS_EMPLOYED'].plot.hist(title = 'Days Employment Histogram') #直方圖
+app_train.boxplot(column=['A'], by = ['B'], showfliers = False, figsize=(12,12)) #方型圖[column=數值, by=分類]
+
+#- plt/sns畫圖
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+#- 直方圖
+plt.hist(app_train['DAYS_BIRTH'] / 365, edgecolor = 'k', bins = 25)
+plt.title('Age of Client'); plt.xlabel('Age (years)'); plt.ylabel('Count');
+plt.show()
+
+plt.bar(range(len(age_groups.index)), age_groups['TARGET'])
+px = age_groups.index
+py = age_groups['TARGET']
+sns.barplot(px, py)
+
+#- x,y連續圖
+sns.kdeplot(app_train.loc[app_train['TARGET'] == 0, 'DAYS_BIRTH'] / 365, label = 'target == 0')
+sns.kdeplot(app_train.loc[app_train['TARGET'] == 1, 'DAYS_BIRTH'] / 365, label = 'target == 1')
+plt.xlabel('Age (years)'); plt.ylabel('Density'); plt.title('Distribution of Ages');
+plt.show()
+sns.kdeplot(app_train.loc[app_train['TARGET'] == 0, 'DAYS_BIRTH'] / 365, label = 'Gaussian esti.', kernel='gau')
+sns.kdeplot(app_train.loc[app_train['TARGET'] == 0, 'DAYS_BIRTH'] / 365, label = 'Cosine esti.', kernel='cos')
+sns.kdeplot(app_train.loc[app_train['TARGET'] == 0, 'DAYS_BIRTH'] / 365, label = 'Triangular esti.', kernel='tri')
+plt.show()
+
+#- 直方+連續線
+sns.distplot(app_train.loc[app_train['TARGET'] == 1, 'DAYS_BIRTH'] / 365, label = 'target == 1')
+plt.show()
+
+from scipy import stats
+df_fixed['LotArea'] = stats.boxcox(df['LotArea'], lmbda=0.5)
+
+#- 相關係數熱譜圖
+sns.heatmap(ext_data.corr(), cmap = plt.cm.RdYlBu_r, vmin = -0.25, annot = True, vmax = 0.6)
+
+from sklearn.linear_model import Lasso
+L1_Reg = Lasso(alpha=0.001)
+L1_Reg.fit(train_X, train_Y)
+L1_Reg.coef_ #輸出每欄的相關係數值(Lasso定義)
+
+#- 上中下種類分析
+grid = sns.PairGrid(data = plot_data, size = 3, diag_sharey=False, 
+                    hue = 'index', vars = [x for x in list(plot_data.columns) if x != 'index'])
+grid.map_upper(plt.scatter , alpha = 0.2)
+grid.map_diag(plt.hist)
+grid.map_lower(sns.kdeplot , cmap = plt.cm.OrRd_r)
+plt.show()
+
+grid = sns.PairGrid(data = plot_data, size = 3, diag_sharey=False,
+                    hue = 'index', vars = [x for x in list(plot_data.columns) if x != 'index'])
+grid.map_upper(plt.scatter , alpha = 0.2)
+grid.map_diag(plt.hist)
+grid.map_lower(sns.kdeplot , cmap = plt.cm.OrRd_r)
+plt.show()
+
+#- x,y點佈圖
+sns.regplot(x=df['OverallQual'], y=train_Y, fit_reg=False)
+
+plt.scatter(x_test, y_test,  color='black')
+plt.plot(x_test, y_pred, color='blue', linewidth=3)
+plt.show()
+
+#- 分類型 連續性分布
+sns.violinplot(x=train_Y, y=df['Sex'], fit_reg=False, scale="width") 以x為分類，y為連續資料
+plt.show()
+
+
+
+
+
+
