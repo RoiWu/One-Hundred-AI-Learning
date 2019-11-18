@@ -1,0 +1,256 @@
+#----
+回歸問題 (預測值為實數)
+‧ RMSE, Root Mean Square Error
+‧ Mean Absolute Error
+‧ R-Square
+分類問題 (預測值為類別)
+‧ Accuracy
+‧ F1-score
+‧ AUC, Area Under Curve
+
+#####分類問題可使用交叉商 (Cross Entropy)。回歸問題可使用均方差 (Mean Square Error)
+
+根據設定?目標建立機器學習模型
+‧ Regression，回歸模型
+‧ Tree-based model，樹模型
+‧ Neural network，神經網路路
+
+01 數據清理/標籤置換
+02 數值標準化/最大最小 (樹模型不用)
+03 數據切割(若使用葉編碼必須再切割val集)
+04 選擇模型
+05 精準度評斷/測試集分數量測
+06 超參數最佳化
+07 揉合模型
+
+#--01
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import Imputer
+
+#--02
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
+
+#--03
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+
+#--04
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import Lasso <-避免過擬合
+from sklearn.linear_model import Ridge <-避免過擬合
+from sklearn.linear_model import SGDRegressor  #隨機梯度下降法 (可參考Day_060_PCA)
+from sklearn.linear_model import SGDClassifier #隨機梯度下降法
+
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingClassifier
+
+from sklearn.decomposition import PCA  (可參考Day_060_PCA)
+
+#--05
+from sklearn.model_selection import cross_val_score
+from sklearn import metrics  
+from sklearn import datasets <-數據集下載
+
+#--06
+from sklearn.model_selection import GridSearchCV  (可參考Day_060_PCA)
+from sklearn.model_selection import RandomizedSearchCV
+
+#--07
+from mlxtend.regressor  import StackingRegressor  
+from mlxtend.classifier import StackingClassifier 
+
+#-----------------------------------------------------------
+001
+
+#- LabelEncoder
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+df = le.transform(app_test[col])
+
+#- One Hot encoding
+(get_dummies 僅能將字串轉換為One hot encoding表示形式)
+df.get_dummies(sub_train, columns = ["Embarked"], prefix="Em"(前贅詞)) #將label依種類化成N行 <- 全部做事
+
+(OneHotEncoder() -> 可以處理數字但不能直接處理字串值， 需先將字串對映成數值。)
+onehot = OneHotEncoder() # OneHotEncoder(categorical_features = [0]) <- 只對第一個序列做事
+--
+onehot.fit(gdbt.apply(train_X)[:, :, 0])
+onehot.transform(rf.apply(val_X)) #可用data_1建立，再用data_2轉換(出現前面沒學到的就會false)
+--
+onehot.fit_transform(data_le).toarray() #直接轉換(用相同的data)
+
+#- 填補器
+imputer = Imputer(strategy = 'median')
+imputer.fit(train)
+
+#-----------------------------------------------------------
+002
+
+#- 最大最小/正規化
+MMEncoder = MinMaxScaler(feature_range = (0, 1))
+train_X = MMEncoder.fit_transform(df)
+df_maxmin = MinMaxScaler().fit_transform(df_m3)
+df_standard = StandardScaler().fit_transform(df_m3)
+
+#-----------------------------------------------------------
+003
+
+train_X, test_X, train_Y, test_Y = train_test_split(train_X, train_Y, test_size=0.5)
+train_X, val_X,  train_Y, val_Y  = train_test_split(train_X, train_Y, test_size=0.5)
+
+kf = KFold(n_splits=5)
+for train_index, test_index in kf.split(X): blablabla #會切成5等分
+
+#-----------------------------------------------------------
+004
+
+#- 線性回歸
+estimator = LinearRegression()
+cross_val_score(estimator, train_X, train_Y, cv=5).mean()
+
+#- 羅吉斯回歸
+estimator = LogisticRegression()
+cross_val_score(estimator, train_X, train_Y, cv=5).mean()
+
+#- 判決樹
+clf = DecisionTreeClassifier()
+clf.fit(x_train, y_train)
+y_pred = clf.predict(x_test)
+clf.feature_importances_ #觀察其重要性
+
+#- 隨機森林
+estimator = RandomForestRegressor()
+cross_val_score(estimator, train_X, train_Y, cv=5).mean()
+estimator.feature_importances_ #判斷參數重要性
+estimator.feature_names        #特徵名稱
+
+estimator = RandomForestClassifier()
+estimator.fit(df.values, train_Y)
+cross_val_score(estimator, train_X, train_Y, cv=5).mean()
+
+#葉編碼
+gdbt = GradientBoostingClassifier(subsample=0.93, n_estimators=320, min_samples_split=0.1, min_samples_leaf=0.3, 
+                                  max_features=4, max_depth=4, learning_rate=0.16)
+onehot = OneHotEncoder()
+lr = LogisticRegression(solver='lbfgs', max_iter=1000)
+
+gdbt.fit(train_X, train_Y)
+onehot.fit(gdbt.apply(train_X)[:, :, 0])
+lr.fit(onehot.transform(gdbt.apply(val_X)[:, :, 0]), val_Y) #以資料進行gdbt攫取之數據為基底，再進行羅吉斯回歸
+
+#- 梯度提升樹
+estimator = GradientBoostingRegressor()
+cross_val_score(estimator, train_X, train_Y, cv=5).mean()
+
+gdbt = GradientBoostingClassifier(subsample=0.93, n_estimators=320, min_samples_split=0.1, min_samples_leaf=0.3, 
+                                  max_features=4, max_depth=4, learning_rate=0.16)
+gdbt.fit(train_X, train_Y)
+
+# Lasso L1
+lasso = Lasso(alpha=1.0)
+lasso.fit(x_train, y_train)
+y_pred = lasso.predict(x_test)
+lasso.coef_ #相關係數
+
+# Ridge L2
+ridge = Ridge(alpha=1.0)
+ridge.fit(x_train, y_train)
+y_pred = regr.predict(x_test)
+ridge.coef_ #相關係數
+
+#-----------------------------------------------------------
+005
+
+#分數定義評估
+mae = metrics.mean_absolute_error(prediction, y) # 使用 MAE 評估
+mse = metrics.mean_squared_error(prediction, y)  # 使用 MSE 評估
+r2  = metrics.r2_score(prediction, y) # 使用 r-square 評估
+auc = metrics.roc_auc_score(y_test, y_pred) #auc量測
+f1  = metrics.f1_score(y_test, y_pred_binarized) # 使用 F1-Score 評估(y_pred_binarized此處只能用0/1不可用機率)
+precision = metrics.precision_score(y_test, y_pred_binarized) # 使用 Precision 評估(y_pred_binarized此處只能用0/1不可用機率)
+recall    = metrics.recall_score(y_test, y_pred_binarized) # 使用 recall 評估(y_pred_binarized此處只能用0/1不可用機率)
+acc       = metrics.accuracy_score(y_test, y_pred)
+
+def custom_fbeta_score(y_true, y_pred, beta=1):
+    precision = precision_score(y_true, y_pred) # 計算 Precision
+    recall = recall_score(y_true, y_pred) # 計算 Recall
+
+    fbeta = (1+ (beta)**2) * (precision*recall) / (((beta)**2*precision) + recall)
+    return fbeta    
+
+f2 = custom_fbeta_score(y_true, y_pred, beta=2)
+
+#ROC curve 定義
+fpr_gdbt_lr, tpr_gdbt_lr, _ = roc_curve(test_Y, pred_gdbt_lr)
+fpr_gdbt, tpr_gdbt, _ = roc_curve(test_Y, pred_gdbt)
+plt.plot(fpr_gdbt, tpr_gdbt, label='GDBT')
+plt.plot(fpr_gdbt_lr, tpr_gdbt_lr, label='GDBT + LR')
+plt.show()
+
+#-----------------------------------------------------------
+006
+
+#- 超參數優化
+clf = GradientBoostingRegressor(random_state=7)
+clf.fit(x_train, y_train)
+y_pred = clf.predict(x_test)
+
+---GridSearchCV
+n_estimators = [100, 200, 300]
+max_depth = [1, 3, 5]
+param_grid = dict(n_estimators=n_estimators, max_depth=max_depth)
+grid_search = GridSearchCV(clf, param_grid, scoring="neg_mean_squared_error", n_jobs=-1, verbose=1)
+grid_result = grid_search.fit(x_train, y_train)
+
+grid_result.best_params_ #最佳參數
+clf_bestparam = GradientBoostingRegressor(max_depth=grid_result.best_params_['max_depth'],
+                                           n_estimators=grid_result.best_params_['n_estimators']) #再用最佳參數進行train
+---RandomizedSearchCV
+n_estimators = [int(x) for x in np.linspace(10, 2000, 20)]
+max_features = ['auto', 'sqrt']
+max_depth = [int(x) for x in np.linspace(10, 110, 11)]
+max_depth.append(None)
+min_samples_split = [2, 5, 10]
+min_samples_leaf = [1, 2, 4]
+bootstrap = [True, False]
+param_grid = dict(n_estimators=n_estimators, max_features=max_features, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, bootstrap=bootstrap)
+
+## 建立搜尋物件，放入模型及參數組合字典 (n_jobs=-1 會使用全部 cpu 平行運算)
+grid_search = RandomizedSearchCV(clf, param_grid, n_jobs=-1, verbose=1, cv = 10)
+grid_result = grid_search.fit(x_train, y_train)
+
+#-----------------------------------------------------------
+007
+
+#- 揉合模型
+linear = LinearRegression(normalize=False, fit_intercept=True, copy_X=True)
+linear.fit(train_X, train_Y)
+linear_pred = linear.predict(test_X)
+
+gdbt = GradientBoostingRegressor(tol=0.1, subsample=0.37, n_estimators=200, max_features=20, 
+                                 max_depth=6, learning_rate=0.03)
+gdbt.fit(train_X, train_Y)
+gdbt_pred = gdbt.predict(test_X)
+
+rf = RandomForestRegressor(n_estimators=300, min_samples_split=9, min_samples_leaf=10, 
+                           max_features='sqrt', max_depth=8, bootstrap=False)
+rf.fit(train_X, train_Y)
+rf_pred = rf.predict(test_X)
+
+meta_estimator = GradientBoostingRegressor(tol=10, subsample=0.44, n_estimators=100, 
+                                           max_features='log2', max_depth=4, learning_rate=0.1) #沒有fit模型
+
+stacking = StackingRegressor(regressors=[linear, gdbt, rf], meta_regressor=meta_estimator)
+stacking.fit(train_X, train_Y)
+stacking_pred = stacking.predict(test_X)
+
+stacking = StackingClassifier(classifiers=[lr, gdbt, rf],
+                              use_probas=True, average_probas=False,
+                              meta_regressor=meta_estimator)
